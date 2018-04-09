@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+message weatherProto{
+	required float MPH = 1;
+	required float KmPH = 2;
+	required int32 calDirection = 3;
+	optional string windDirection = 4;
+}

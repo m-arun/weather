@@ -1,0 +1,100 @@
+{
+  "refCatalogueSchema": "wind_schema.json",
+  "id": "windSpeed_Direction",
+  "resourceType": "weatherRack",
+  "tags": [
+    "Anemometer",
+    "Wind Vane",
+    "still under development!"
+  ],
+  "refCatalogueSchemaRelease":"0.1.0",
+  "latitude": {
+    "value": 13.0143335,
+    "ontologyRef": "http://www.w3.org/2003/01/geo/wgs84_pos#"
+  },
+  "longitude": {
+    "value": 77.5678424,
+    "ontologyRef": "http://www.w3.org/2003/01/geo/wgs84_pos#"
+  },
+  "owner": {
+    "name": "IISC",
+    "website": "http://www.iisc.ac.in"
+  },
+  "provider": {
+    "name": "Robert Bosch Centre for Cyber Physical Systems, IISc",
+    "website": "http://rbccps.org"
+  },
+  "geoLocation": {
+    "address": "80 ft Road, Bangalore, 560012"
+  },
+  "accessMechanism": {
+    "requestAccessSite": {
+      "describes": "URI for getting permissions to access the device", 
+      "value": "http://rbccps.org/middleware/requestAccess"
+    }, 
+    "accessEndPoint": {
+       "value": "https://rbccps.org/middleware/api/{api_ver}/db",
+       "describes": "End point to access the archived values (database access endpoint)"
+    },
+    "subscriptionEndPoint": {
+       "value": "mqtt://rbccps.org/subscription/live",
+       "describes": "End point for subscribing to LIVE data"
+    },
+    "additionalResourceInfo": {
+       "value": "http://rbccps.org/resourceInfo/{id}",
+       "describes": "Additional information about the device"
+    },
+    "resourceAPIInfo": {
+       "value": "http://rbccps.org/resourceInfo/api",
+       "describes": "Information on how to use various APIs (access, update, cat) associated with this resource"
+    }
+  },
+  "data_schema": {
+    "type": "object",
+    "properties": {
+        "dataSamplingInstant": {
+          "type": "number",
+          "description": "Sampling Time in EPOCH format",
+          "units": "seconds",
+          "permissions": "read",
+          "accessModifier": "public"
+        },
+        "MPH": {
+          "type": "number",
+          "description": " ",
+          "units": " ",
+          "permissions": "read",
+          "accessModifier": "public"
+        },
+        "KmpH": {
+          "type": "number",
+          "description": " ",
+          "units": " ",
+          "permissions": "read",
+          "accessModifier": "public"
+        },
+        "calDirection": {
+          "type": "number",
+          "description": " ",
+          "units": " ",
+          "permissions": "read",
+          "accessModifier": "public"
+        },
+
+  "serialization_from_device":{
+    "format": "protocol-buffers",
+    "schema_ref": {
+       "type": "proto 2",
+       "mainMessageName": "Sensed",
+       "link": "https://raw.githubusercontent.com/mukuntharun/flowsensor/master/protos/sensed.proto"
+    }
+  },
+  "serialization_to_device":{
+    "format": "protocol-buffers",
+    "schema_ref": {
+       "type": "proto 2",
+       "mainMessageName": "targetConfigurations",
+       "link": "https://raw.githubusercontent.com/rbccps-iisc/applications-streetlight/master/proto_stm/rxmsg/actuated.proto"
+    }
+  }
+}
