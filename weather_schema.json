@@ -60,22 +60,22 @@
           "accessModifier": "public"
         },
         "MPH": {
-          "type": "number",
-          "description": " ",
-          "units": " ",
+          "type": "float",
+          "description": "Wind Speed in Miles per Hour",
+          "units": "mph",
           "permissions": "read",
           "accessModifier": "public"
         },
         "KmpH": {
-          "type": "number",
-          "description": " ",
-          "units": " ",
+          "type": "float",
+          "description": "Wind Speed in Kilometers per Hour",
+          "units": "KmPh",
           "permissions": "read",
           "accessModifier": "public"
         },
         "calDirection": {
           "type": "number",
-          "description": " ",
+          "description": "Direction of Wind - N/NE/E/SE/S/SW/W/NW/",
           "units": " ",
           "permissions": "read",
           "accessModifier": "public"
@@ -85,16 +85,8 @@
     "format": "protocol-buffers",
     "schema_ref": {
        "type": "proto 2",
-       "mainMessageName": "Sensed",
-       "link": "https://raw.githubusercontent.com/mukuntharun/flowsensor/master/protos/sensed.proto"
-    }
-  },
-  "serialization_to_device":{
-    "format": "protocol-buffers",
-    "schema_ref": {
-       "type": "proto 2",
-       "mainMessageName": "targetConfigurations",
-       "link": "https://raw.githubusercontent.com/rbccps-iisc/applications-streetlight/master/proto_stm/rxmsg/actuated.proto"
+       "mainMessageName": "weatherProto",
+       "link": "https://raw.githubusercontent.com/mkarun/weather/master/protos/weather.proto"
     }
   }
 }

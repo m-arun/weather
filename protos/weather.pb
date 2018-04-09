@@ -1,8 +1,7 @@
 
-è
-weather.proto"~
+i
+weather.proto"X
 weatherProto
 MPH (RmPH
 KmPH (RkmPH"
-calDirection (RcalDirection$
-windDirection (	RwindDirection
+calDirection (RcalDirection

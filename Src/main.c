@@ -66,7 +66,7 @@
  */
 #define LORAWAN_DUTYCYCLE_ON                        false
 
-#define USE_SEMTECH_DEFAULT_CHANNEL_LINEUP          1
+#define USE_SEMTECH_DEFAULT_CHANNEL_LINEUP          0
 
 #if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
 
@@ -224,7 +224,8 @@ pb_ostream_t stream;
 static void PrepareTxFrame(uint8_t port) {
 	switch (port) {
 	case 3:{
-		weatherProto wt = {MPH, KmPH, calDirection, windDirection};
+//		weatherProto wt = {MPH, KmPH, calDirection, windDirection};
+		weatherProto wt = {MPH, KmPH, calDirection};
 		pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
 		pb_encode(&stream, weatherProto_fields, &wt);
 		memcpy(AppData, buffer, (uint8_t)stream.bytes_written);
@@ -628,8 +629,8 @@ int main(void) {
 		if(calDirection < 0)
 			calDirection = calDirection + 360;
 //		windDirection = getHeading(calDirection);
-		strcpy(windDirection, getHeading(calDirection));
-		flag = 13;
+//		strcpy(windDirection, getHeading(calDirection));
+//		flag = 13;
 
 	switch (DeviceState) {
 	case DEVICE_STATE_INIT: {
