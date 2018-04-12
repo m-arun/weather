@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='weather.proto',
   package='',
   syntax='proto2',
-  serialized_pb=_b('\n\rweather.proto\"?\n\x0cweatherProto\x12\x0b\n\x03MPH\x18\x01 \x02(\x02\x12\x0c\n\x04KmPH\x18\x02 \x02(\x02\x12\x14\n\x0c\x63\x61lDirection\x18\x03 \x02(\x05')
+  serialized_pb=_b('\n\rweather.proto\"Q\n\x0cweatherProto\x12\x0b\n\x03MPH\x18\x01 \x02(\x02\x12\x0c\n\x04KmPH\x18\x02 \x02(\x02\x12\x14\n\x0c\x63\x61lDirection\x18\x03 \x02(\x02\x12\x10\n\x08rainFall\x18\x04 \x02(\x02')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -49,8 +49,15 @@ _WEATHERPROTO = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='calDirection', full_name='weatherProto.calDirection', index=2,
-      number=3, type=5, cpp_type=1, label=2,
-      has_default_value=False, default_value=0,
+      number=3, type=2, cpp_type=6, label=2,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='rainFall', full_name='weatherProto.rainFall', index=3,
+      number=4, type=2, cpp_type=6, label=2,
+      has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -67,7 +74,7 @@ _WEATHERPROTO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=17,
-  serialized_end=80,
+  serialized_end=98,
 )
 
 DESCRIPTOR.message_types_by_name['weatherProto'] = _WEATHERPROTO

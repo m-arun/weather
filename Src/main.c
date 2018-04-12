@@ -184,39 +184,40 @@ struct ComplianceTest_s
 	uint8_t NbGateways;
 }ComplianceTest;
 
-//uint8_t encryptKey[16] = LORAWAN_APPLICATION_KEY;
-//uint8_t dongleID[8] = LORAWAN_DEVICE_EUI;
+#define SPEED										PB_13
+#define RAIN										PB_15
+#define VANE										PB_14
+#define bucketSize									0.254
+#define offset										0
+
 uint8_t txBuffer[100];
 uint8_t rxBuffer[100];
-uint8_t sensVal[100];// prepare TX frame
 uint8_t flag = 0;
-uint8_t txFlag = 0;
-uint16_t msgLen = 0;
-uint16_t valueLen = 0; //prepare TX frame
 
 volatile uint32_t Rotations;
 volatile uint32_t ContactBounceTime;
+volatile uint32_t tipCount;
+volatile uint32_t ContactTime;
+
 float MPH;
 float KmPH;
-uint16_t vaneValue;
-uint16_t direction;
-uint16_t calDirection;
-char windDirection[3];
-char heading[3];
+float rainFall;
+float vaneValue;
+float direction;
+float calDirection;
 
 Gpio_t windSpeed;
+Gpio_t precipitation;
 Adc_t windVane;
 
-#define SPEED										PB_15
-#define VANE										PB_14
-#define offset										0
+uint8_t buffer[20];
+pb_ostream_t stream;
 
 void UartISR(UartNotifyId_t id);
 void irqRotation();
+void irqRain();
 uint16_t directionMap(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
-char getHeading(uint16_t direction);
-uint8_t buffer[20];
-pb_ostream_t stream;
+
 
 /*!f
  * \brief   Prepares the payload of the frame
@@ -224,8 +225,7 @@ pb_ostream_t stream;
 static void PrepareTxFrame(uint8_t port) {
 	switch (port) {
 	case 3:{
-//		weatherProto wt = {MPH, KmPH, calDirection, windDirection};
-		weatherProto wt = {MPH, KmPH, calDirection};
+		weatherProto wt = {MPH, KmPH, calDirection, rainFall};
 		pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
 		pb_encode(&stream, weatherProto_fields, &wt);
 		memcpy(AppData, buffer, (uint8_t)stream.bytes_written);
@@ -593,8 +593,8 @@ int main(void) {
 	BoardInitMcu();
 	BoardInitPeriph();
 
-	GpioInit(&windSpeed, SPEED, PIN_INPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
-//	GpioInit(&windVane, VANE, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
+	GpioInit(&windSpeed, SPEED, PIN_INPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0);
+	GpioInit(&precipitation, RAIN, PIN_INPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0);
 	AdcInit(&windVane, VANE);
 
 
@@ -615,11 +615,19 @@ int main(void) {
 
 	while (1) {
 		Rotations = 0;
+		tipCount = 0;
+		MPH = 0;
+		KmPH = 0;
+		rainFall = 0;
 		GpioSetInterrupt(&windSpeed, IRQ_FALLING_EDGE, IRQ_MEDIUM_PRIORITY, irqRotation);
+		GpioSetInterrupt(&precipitation, IRQ_FALLING_EDGE, IRQ_MEDIUM_PRIORITY, irqRain);
 		DelayMs(5000);
 		GpioRemoveInterrupt(&windSpeed);
+		GpioRemoveInterrupt(&precipitation);
+
 		MPH = (Rotations * 1.492)/5;
 		KmPH = (Rotations * 2.4)/5;
+		rainFall = tipCount * bucketSize;
 
 		vaneValue = AdcReadChannel(&windVane, 20);	// channel Number=20 for PB_14
 		direction = directionMap(vaneValue, 0, 1023, 0, 360);
@@ -628,8 +636,7 @@ int main(void) {
 			calDirection = calDirection - 360;
 		if(calDirection < 0)
 			calDirection = calDirection + 360;
-//		windDirection = getHeading(calDirection);
-//		strcpy(windDirection, getHeading(calDirection));
+
 //		flag = 13;
 
 	switch (DeviceState) {
@@ -786,11 +793,17 @@ void UartISR(UartNotifyId_t id) {
 	}
 }
 
+void irqRain(){
+	if ((HAL_GetTick() - ContactTime) > 15 ) {
+		tipCount++;
+	    ContactTime = HAL_GetTick();
+	}
+}
+
 void irqRotation(){
 	if ((HAL_GetTick() - ContactBounceTime) > 15 ) {
 		Rotations++;
 	    ContactBounceTime = HAL_GetTick();
-	    txFlag = 1;
 	}
 }
 
@@ -799,7 +812,7 @@ uint16_t directionMap(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out
 		  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 		}
 
-char getHeading(uint16_t direction) {
+/*char getHeading(uint16_t direction) {
 //	char heading[3];
 	if(direction < 22){
 		strcpy(heading, "NOR");
@@ -837,5 +850,5 @@ char getHeading(uint16_t direction) {
 		strcpy(heading, "NOR");
 		return heading;
 		}
-}
+}*/
 
