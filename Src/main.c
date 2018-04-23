@@ -30,13 +30,13 @@
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
  */
-#define APP_TX_DUTYCYCLE                            30000
+#define APP_TX_DUTYCYCLE                            120000
 
 /*!
  * Defines a random delay for application data transmission duty cycle. 1s,
  * value in [ms].
  */
-#define APP_TX_DUTYCYCLE_RND                        1000
+#define APP_TX_DUTYCYCLE_RND                        10000
 
 /*!
  * Default datarate
@@ -184,11 +184,11 @@ struct ComplianceTest_s
 	uint8_t NbGateways;
 }ComplianceTest;
 
-#define SPEED										PB_13
-#define RAIN										PB_15
-#define VANE										PB_14
-#define bucketSize									0.254
-#define offset										0
+#define SPEED										PB_13	//Pin No 14
+#define RAIN										PB_15	//Pin No 13
+#define VANE										PB_14	//Pin No 12
+#define bucketSize									0.2794 	//0.011 inch
+#define offset										0	//-102
 
 uint8_t txBuffer[100];
 uint8_t rxBuffer[100];
@@ -627,7 +627,7 @@ int main(void) {
 
 		MPH = (Rotations * 1.492)/5;
 		KmPH = (Rotations * 2.4)/5;
-		rainFall = tipCount * bucketSize;
+		rainFall = (tipCount * bucketSize)/5;
 
 		vaneValue = AdcReadChannel(&windVane, 20);	// channel Number=20 for PB_14
 		direction = directionMap(vaneValue, 0, 1023, 0, 360);
@@ -636,8 +636,6 @@ int main(void) {
 			calDirection = calDirection - 360;
 		if(calDirection < 0)
 			calDirection = calDirection + 360;
-
-//		flag = 13;
 
 	switch (DeviceState) {
 	case DEVICE_STATE_INIT: {
@@ -811,44 +809,4 @@ uint16_t directionMap(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out
 		{
 		  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 		}
-
-/*char getHeading(uint16_t direction) {
-//	char heading[3];
-	if(direction < 22){
-		strcpy(heading, "NOR");
-		return heading;
-		}
-	else if (direction < 67){
-		strcpy(heading, "N-E");
-		return heading;
-		}
-	else if (direction < 112){
-		strcpy(heading, "EAS");
-		return heading;
-		}
-	else if (direction < 157){
-		strcpy(heading, "S-E");
-		return heading;
-		}
-	else if (direction < 212){
-		strcpy(heading, "SOU");
-		return heading;
-		}
-	else if (direction < 247){
-		strcpy(heading, "S-W");
-		return heading;
-		}
-	else if (direction < 292){
-		strcpy(heading, "WES");
-		return heading;
-		}
-	else if (direction < 337){
-		strcpy(heading, "N-W");
-		return heading;
-		}
-	else{
-		strcpy(heading, "NOR");
-		return heading;
-		}
-}*/
 

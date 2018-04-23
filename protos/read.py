@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import paho.mqtt.client as mqtt
 import sys
 import json
@@ -20,18 +18,65 @@ def on_connect(client, userdata, flags, rc):
     # reconnect then subscriptions will be renewed.
     client.subscribe("application/1/node/70b3d58ff0031de5/rx")
 
+
+def get_heading(direction):
+    global heading
+    if(direction < 48):
+        heading = 'East'
+    elif (direction < 80):
+        heading = 'South-East'
+    elif (direction < 116):
+        heading = 'South'
+    elif (direction < 177):
+        heading = 'North-East'
+    elif (direction < 237):
+        heading = 'South-West'
+    elif (direction < 290):
+        heading = 'North'
+    elif (direction < 327):
+        heading = 'North-West'
+    elif (direction < 348):
+        heading = 'West'
+    else:
+        heading = 'East'
+    return heading
+
+'''def get_heading(direction):
+    global heading
+    if(direction < 22.5):
+        heading = 'North'
+    elif (direction < 67.5):
+        heading = 'North-East'
+    elif (direction < 112.5):
+        heading = 'East'
+    elif (direction < 157.5):
+        heading = 'South-East'
+    elif (direction < 212.5):
+        heading = 'South'
+    elif (direction < 247.5):
+        heading = 'South-West'
+    elif (direction < 292.5):
+        heading = 'West'
+    elif (direction < 337.5):
+        heading = 'North-West'
+    else:
+        heading = 'North'
+    return heading'''
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    print(str(msg.payload))
-    print(json.loads(str(msg.payload))["data"])
-    decodedData = str(base64.b64decode(json.loads(str(msg.payload))["data"]))
-    print (decodedData)
-    rxmsg.ParseFromString(decodedData)
-    print ('Wind Speed in MPH '  + str(rxmsg.MPH))
-    print ('Wind Speed in KmPH '  + str(rxmsg.KmPH))
-#    print ('Wind Direction ' + str(rxmsg.calDirection))
-    print ('Wind Direction ' + getHeading(rxmsg.calDirection))
-    print ('Rain Fall ' + str(rxmsg.rainFall))
+    #print(str(msg.payload))
+    # print(json.loads(str(msg.payload))["data"])
+    decodedData = base64.b64decode(json.loads(msg.payload)["data"])
+    #print (decodedData)
+    parseData = rxmsg.ParseFromString(decodedData)
+    #print(parseData)
+    print ('')
+    print ('Wind Speed in MPH - {0:.3f}'.format(rxmsg.MPH))
+    print ('Wind Speed in KmPH - {0:.3f}'.format(rxmsg.KmPH))
+    #print ('Wind Direction ' + str(rxmsg.calDirection))
+    print ('Wind Direction - ' + get_heading(rxmsg.calDirection))
+    print ('Rain Fall in mm - {0:.3f}'.format(rxmsg.rainFall))
+    print ('')
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -40,25 +85,3 @@ client.username_pw_set("loraserver","loraserver")
 
 client.connect("gateways.rbccps.org", 1883, 60)
 client.loop_forever()
-
-def getHeading(direction):
-        global heading
-        if(direction < 22.5):
-            heading = 'North'
-        elif (direction < 67.5):
-            heading = 'North-East'
-        elif (direction < 112.5):
-            heading = 'East'
-        elif (direction < 157.5):
-            heading = 'South-East'
-        elif (direction < 212.5):
-            heading = 'South'
-        elif (direction < 247.5):
-            heading = 'South-West'
-        elif (direction < 292.5):
-            heading = 'West'
-        elif (direction < 337.5):
-            heading = 'North-West'
-        else:
-            heading = 'North'
-        return heading
