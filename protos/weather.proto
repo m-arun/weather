@@ -1,8 +1,7 @@
 syntax = "proto2";
 
 message weatherProto{
-	required float MPH = 1;
-	required float KmPH = 2;
-	required float calDirection = 3;
-	required float rainFall = 4;
+	required float windSpeed = 1;
+	required float degree = 2;
+	required float precipitation = 3;
 }

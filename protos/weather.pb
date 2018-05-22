@@ -1,8 +1,7 @@
 
-…
-weather.proto"t
-weatherProto
-MPH (RmPH
-KmPH (RkmPH"
-calDirection (RcalDirection
-rainFall (RrainFall
+{
+weather.proto"j
+weatherProto
+	windSpeed (R	windSpeed
+degree (Rdegree$
+precipitation (Rprecipitation

@@ -30,13 +30,13 @@
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
  */
-#define APP_TX_DUTYCYCLE                            30000
+#define APP_TX_DUTYCYCLE                            120000
 
 /*!
  * Defines a random delay for application data transmission duty cycle. 1s,
  * value in [ms].
  */
-#define APP_TX_DUTYCYCLE_RND                        1000
+#define APP_TX_DUTYCYCLE_RND                        10000
 
 /*!
  * Default datarate
@@ -188,27 +188,32 @@ struct ComplianceTest_s
 #define RAIN										PB_15	//Pin No 13
 #define VANE										PB_14	//Pin No 12
 #define bucketSize									0.2794 	//0.011 inch
-#define offset										0	//-102
+#define offset										0
 
 uint8_t txBuffer[100];
 uint8_t rxBuffer[100];
 uint8_t flag = 0;
+
+uint16_t heading[7] = {0};
+uint16_t maximum;
+uint16_t position;
+uint16_t degree;
 
 volatile uint32_t Rotations;
 volatile uint32_t ContactBounceTime;
 volatile uint32_t tipCount;
 volatile uint32_t ContactTime;
 
-float MPH;
-float KmPH;
-float rainFall;
 float vaneValue;
 float direction;
 float calDirection;
+float windSpeed;
+float precipitation;
 
-Gpio_t windSpeed;
-Gpio_t precipitation;
+Gpio_t windmotion;
+Gpio_t precipitancy;
 Adc_t windVane;
+static TimerEvent_t windDirection;
 
 uint8_t buffer[20];
 pb_ostream_t stream;
@@ -216,6 +221,7 @@ pb_ostream_t stream;
 void UartISR(UartNotifyId_t id);
 void irqRotation();
 void irqRain();
+void tmrDirection();
 uint16_t directionMap(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
 
 
@@ -225,7 +231,7 @@ uint16_t directionMap(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out
 static void PrepareTxFrame(uint8_t port) {
 	switch (port) {
 	case 3:{
-		weatherProto wt = {MPH, KmPH, calDirection, rainFall};
+		weatherProto wt = {windSpeed, degree, precipitation};
 		pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
 		pb_encode(&stream, weatherProto_fields, &wt);
 		memcpy(AppData, buffer, (uint8_t)stream.bytes_written);
@@ -489,6 +495,7 @@ static void McpsIndication(McpsIndication_t *mcpsIndication) {
 					ComplianceTest.DownLinkCounter = 0;
 					ComplianceTest.Running = false;
 
+
 					MibRequestConfirm_t mibReq;
 					mibReq.Type = MIB_ADR;
 					mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
@@ -593,8 +600,10 @@ int main(void) {
 	BoardInitMcu();
 	BoardInitPeriph();
 
-	GpioInit(&windSpeed, SPEED, PIN_INPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0);
-	GpioInit(&precipitation, RAIN, PIN_INPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0);
+	uint8_t i;
+
+	GpioInit(&windmotion, SPEED, PIN_INPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0);
+	GpioInit(&precipitancy, RAIN, PIN_INPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0);
 	AdcInit(&windVane, VANE);
 
 
@@ -613,29 +622,54 @@ int main(void) {
 	FifoFlush(&Uart1.FifoRx);
 	FifoFlush(&Uart1.FifoTx);
 
+	TimerInit(&windDirection, tmrDirection);
+	TimerSetValue(&windDirection, 1000);
+	TimerStart(&windDirection);
+
 	while (1) {
 		Rotations = 0;
 		tipCount = 0;
-		MPH = 0;
-		KmPH = 0;
-		rainFall = 0;
-		GpioSetInterrupt(&windSpeed, IRQ_FALLING_EDGE, IRQ_MEDIUM_PRIORITY, irqRotation);
-		GpioSetInterrupt(&precipitation, IRQ_FALLING_EDGE, IRQ_MEDIUM_PRIORITY, irqRain);
-		DelayMs(5000);
-		GpioRemoveInterrupt(&windSpeed);
-		GpioRemoveInterrupt(&precipitation);
+		windSpeed = 0;
+		precipitation = 0;
+		GpioSetInterrupt(&windmotion, IRQ_FALLING_EDGE, IRQ_MEDIUM_PRIORITY, irqRotation);
+		GpioSetInterrupt(&precipitancy, IRQ_FALLING_EDGE, IRQ_MEDIUM_PRIORITY, irqRain);
+		DelayMs(120000);
+		GpioRemoveInterrupt(&windmotion);
+		GpioRemoveInterrupt(&precipitancy);
 
-		MPH = (Rotations * 1.492)/5;
-		KmPH = (Rotations * 2.4)/5;
-		rainFall = (tipCount * bucketSize)/5;
+		windSpeed = (Rotations * 2.4)/120;
+		precipitation = (tipCount * bucketSize)/120;
 
-		vaneValue = AdcReadChannel(&windVane, 20);	// channel Number=20 for PB_14
-		direction = directionMap(vaneValue, 0, 1023, 0, 360);
-		calDirection = direction + offset;
-		if(calDirection > 360)
-			calDirection = calDirection - 360;
-		if(calDirection < 0)
-			calDirection = calDirection + 360;
+		maximum = heading[0];
+		for (i = 1; i < 8; i++)
+		{
+			if (heading[i] > maximum)
+			{
+				maximum  = heading[i];
+				position = i+1;
+			}
+		}
+		if (position == 1)
+			degree = 0;
+		else if (position == 2)
+			degree = 45;
+		else if (position == 3)
+			degree = 90;
+		else if (position == 4)
+			degree = 135;
+		else if (position == 5)
+			degree = 180;
+		else if (position == 6)
+			degree = 225;
+		else if (position == 7)
+			degree = 270;
+		else if (position == 8)
+			degree = 315;
+		else
+			degree = 404;
+
+		for (i = 0; i < 8; i++)
+			heading[i] = 0;
 
 	switch (DeviceState) {
 	case DEVICE_STATE_INIT: {
@@ -803,6 +837,39 @@ void irqRotation(){
 		Rotations++;
 	    ContactBounceTime = HAL_GetTick();
 	}
+}
+
+void tmrDirection(){
+	vaneValue = AdcReadChannel(&windVane, 20);	// channel Number=20 for PB_14
+	direction = directionMap(vaneValue, 0, 1023, 0, 360);
+	calDirection = direction + offset;
+	if(calDirection > 360)
+		calDirection = calDirection - 360;
+	if(calDirection < 0)
+		calDirection = calDirection + 360;
+
+	if(calDirection < 48)
+		heading[0]++; 			//East
+	else if(calDirection < 80)
+	    heading[1]++; 			//South-East
+	else if (calDirection < 116)
+	    heading[2]++; 			//South
+	else if (calDirection < 177)
+	    heading[7]++; 			//North-East
+	else if (calDirection < 237)
+	    heading[3]++; 			//South-West
+	else if (calDirection < 290)
+	    heading[6]++; 			//North
+	else if (calDirection < 327)
+	    heading[5]++; 			//North-West
+	else if (calDirection < 348)
+	    heading[4]++; 			//West
+	else
+	    heading[0]++; 			//East
+
+	TimerStop(&windDirection);
+	TimerSetValue(&windDirection, 1000);
+	TimerStart(&windDirection);
 }
 
 uint16_t directionMap(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max)
