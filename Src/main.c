@@ -848,24 +848,33 @@ void tmrDirection(){
 	if(calDirection < 0)
 		calDirection = calDirection + 360;
 
-	if(calDirection < 48)
-		heading[0]++; 			//East
-	else if(calDirection < 80)
-	    heading[1]++; 			//South-East
-	else if (calDirection < 116)
-	    heading[2]++; 			//South
-	else if (calDirection < 177)
-	    heading[7]++; 			//North-East
-	else if (calDirection < 237)
-	    heading[3]++; 			//South-West
-	else if (calDirection < 290)
-	    heading[6]++; 			//North
-	else if (calDirection < 327)
-	    heading[5]++; 			//North-West
-	else if (calDirection < 348)
-	    heading[4]++; 			//West
+	if(calDirection < 48)		//East
+//		heading[0]++; 			//East
+		heading[2]++;
+	else if(calDirection < 80)	//South-East
+//	    heading[1]++; 			//South-East
+		heading[3]++;
+	else if (calDirection < 116)//South
+//	    heading[2]++; 			//South
+		heading[4]++;
+	else if (calDirection < 177)//North-East
+//	    heading[7]++; 			//North-East
+		heading[1]++;
+	else if (calDirection < 237)//South-West
+//	    heading[3]++; 			//South-West
+		heading[5]++;
+	else if (calDirection < 290)//North
+//	    heading[6]++; 			//North
+		heading[0]++;
+	else if (calDirection < 327)//North-West
+//	    heading[5]++; 			//North-West
+		heading[7]++;
+	else if (calDirection < 348)//West
+//	    heading[4]++; 			//West
+		heading[6]++;
 	else
-	    heading[0]++; 			//East
+//	    heading[0]++; 			//East
+		heading[2]++;
 
 	TimerStop(&windDirection);
 	TimerSetValue(&windDirection, 1000);
