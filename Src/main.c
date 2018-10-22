@@ -30,13 +30,13 @@
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
  */
-#define APP_TX_DUTYCYCLE                            120000
+#define APP_TX_DUTYCYCLE                            5000
 
 /*!
  * Defines a random delay for application data transmission duty cycle. 1s,
  * value in [ms].
  */
-#define APP_TX_DUTYCYCLE_RND                        10000
+#define APP_TX_DUTYCYCLE_RND                        1000
 
 /*!
  * Default datarate
@@ -218,7 +218,6 @@ static TimerEvent_t windDirection;
 uint8_t buffer[20];
 pb_ostream_t stream;
 
-void UartISR(UartNotifyId_t id);
 void irqRotation();
 void irqRain();
 void tmrDirection();
@@ -607,20 +606,7 @@ int main(void) {
 	AdcInit(&windVane, VANE);
 
 
-	FifoInit(&Uart1.FifoTx, txBuffer, 100);
-	FifoInit(&Uart1.FifoRx, rxBuffer, 100);
-
-	UartInit(&Uart1, 0, UART_TX, UART_RX);
-	Uart1.IrqNotify = UartISR;
-
-	UartConfig(&Uart1, RX_TX, 115200, UART_8_BIT, UART_1_STOP_BIT, NO_PARITY,
-			NO_FLOW_CTRL);
-
-
 	DeviceState = DEVICE_STATE_INIT;
-
-	FifoFlush(&Uart1.FifoRx);
-	FifoFlush(&Uart1.FifoTx);
 
 	TimerInit(&windDirection, tmrDirection);
 	TimerSetValue(&windDirection, 1000);
@@ -812,19 +798,6 @@ int main(void) {
 	}
 }
 
-
-void UartISR(UartNotifyId_t id) {
-
-	if (id == UART_NOTIFY_RX) {
-		flag = 1;
-	}
-
-	if (id == UART_NOTIFY_TX) {
-		flag = 0;
-//		UartReEnableRx(); // Implicit declaration warning can be ignored
-	}
-}
-
 void irqRain(){
 	if ((HAL_GetTick() - ContactTime) > 15 ) {
 		tipCount++;
@@ -885,4 +858,5 @@ uint16_t directionMap(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out
 		{
 		  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 		}
+
 
